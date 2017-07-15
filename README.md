@@ -12,61 +12,61 @@ Version:
 		
 
 Teraform:
-         Creates VPC with 
-		CIDR: 10.31.0.0/16
-		PUBLIC SUBNET: 10.31.0.0/24
-		PRIVATE SUBNET: 10.31.1.0/24
-		IG: General Internet Gateway
-		NAT G: Nat to Internet
-		RT: General Table of routing
-		IP: Allocate IP to NAT
-		Route Association:
+Creates VPC with 
+- 		CIDR: 10.31.0.0/16
+- 		PUBLIC SUBNET: 10.31.0.0/24
+- 		PRIVATE SUBNET: 10.31.1.0/24
+- 		IG: General Internet Gateway
+- 		NAT G: Nat to Internet
+- 		RT: General Table of routing
+- 		IP: Allocate IP to NAT
+- 		Route Association:
 
 			EC2:
-			    1 Bastian HOST [Public]
-			    N ETCD Node    [Private]	[behind ELB]
-			    N Master Node  [Private]	[behind ELB]
-			    N Nodes        [Private]]
+- 			    1 Bastian HOST [Public]
+- 			    N ETCD Node    [Private]	[behind ELB]
+- 			    N Master Node  [Private]	[behind ELB]
+- 			    N Nodes        [Private]]
 		
 			    
 
 Ansible:
-	Creates ETCD Cluster with TLS
+- 	Creates ETCD Cluster with TLS
 		etcd
 		flannel
-	Creates Kube Master with TLS
+- 	Creates Kube Master with TLS
 		kube-apiserver
 		kube-controller-manager
 		kube-scheduler
 		flannel
-	Creates kube Nodes with TLS Support for kubelet
+- 	Creates kube Nodes with TLS Support for kubelet
 		kube-proxy
 		kubelete
 		flannel
 		docker
 
 	Roles:
-	apiserver: 		Creates api server
-	apiserver-operator:	Creates api server [adding additional nodes]
-	controller-manager:	Creates controller-manager
-	dumpall:		Dump all variables
-	efs-client:		mount efs server
-	etcd:			Creates etcd cluster
-	etcd-operator:		Adds members to etcd cluster
-	flanneld:		configure flanneld
-	kube-common:		creats all general 
-	prep:			preparation for kube-common
-	kubelet:		configures kubelet 
-	provision-ec2:	        provisioning node for addons [based on variables on ansible/vars/etc2/<< tag name>>]	
-	scheduler:		creates kube scheduler 
-	selinux:		disable selinux wait until reboot
+- 	apiserver: 		Creates api server 
+- 	apiserver-operator:	Creates api server [adding additional nodes]
+- 	controller-manager:	Creates controller-manager
+- 	dumpall:		Dump all variables
+- 	efs-client:		mount efs server
+- 	etcd:			Creates etcd cluster
+- 	etcd-operator:		Adds members to etcd cluster
+- 	flanneld:		configure flanneld
+- 	kube-common:		creats all general 
+- 	prep:			preparation for kube-common
+- 	kubelet:		configures kubelet 
+- 	provision-ec2:	        provisioning node for addons [based on variables on ansible/vars/etc2/<< tag name>>]	
+- 	scheduler:		creates kube scheduler 
+- 	selinux:		disable selinux wait until reboot
 
 
 Incomplete:
 	Works with few tweaks
-		ETCD [adding members]
-		Master [adding masters]
-		Node [adding minions]
+- 		ETCD [adding members]
+- 		Master [adding masters]
+- 		Node [adding minions]
 
 
 
