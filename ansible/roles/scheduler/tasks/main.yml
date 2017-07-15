@@ -1,0 +1,16 @@
+--- 
+- name: Scheduler configuration
+  action: template src=templates/scheduler.j2 dest=/etc/kubernetes/scheduler
+ 
+
+- name: enable services and ensure it is not masked
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  with_items:
+     - kube-apiserver
+     - kube-controller-manager
+     - kube-scheduler
+     #- flanneld

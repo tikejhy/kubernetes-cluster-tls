@@ -1,0 +1,4 @@
+KUBELET_ADDRESS="--address=0.0.0.0"
+KUBELET_PORT="--port=10250"
+KUBELET_API_SERVER="--api-servers=https://api.kube-master.ashishnepal.com:6443"
+KUBELET_ARGS="--cluster-dns=10.254.3.100 --cluster-domain=cluster.local --kubeconfig=/var/lib/kubelet/kubeconfig --tls-cert-file=/srv/kubernetes/kubecfg.crt --tls-private-key-file=/srv/kubernetes/kubecfg.key"

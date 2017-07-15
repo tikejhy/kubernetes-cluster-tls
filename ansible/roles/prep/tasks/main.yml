@@ -1,0 +1,124 @@
+--- 
+- copy: 
+   dest: /usr/local/src
+   src: ./ansible/src
+  name: "Copy new config if exists"
+
+- name: Install list of packages
+  yum: name={{item}} state=installed update_cache=yes enablerepo=epel
+  ignore_errors: yes
+  with_items:
+    - vim
+    - strace
+    - mlocate
+    - telnet 
+    - wget
+    - curl
+    - openssl
+    - yum-utils
+    - jq
+    - python-pip
+    - git
+  tags:
+    - updateDNS
+
+
+- name: search for our domain
+  lineinfile:
+    dest: /etc/resolv.conf
+    regexp: '^search'
+    line: 'search eu-west-1.compute.internal etcd.kube-master.ashishnepal.com'
+
+- name: Prep for Boto 2.47 
+  git:
+    repo: 'https://github.com/boto/boto'
+    dest: /usr/local/src/boto
+    version: 2.47.0
+  tags:
+    - updateDNS
+
+- name: lets install boto for route53
+  shell: cd /usr/local/src/boto && python setup.py install
+  tags:
+   - updateDNS
+
+- hostname:
+    #name: "{{ inventory_hostname }}"
+    name: "{{ ec2_tag_Name }}"
+  tags:
+    - updateDNS
+
+- debug:
+    msg: "Inventory_hostname: {{ inventory_hostname }} ansible_hostname: {{ansible_hostname}} IP: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+  tags:
+    - debug
+
+- name: Create A record of the host
+  route53:
+      command: create
+      zone: kube-master.ashishnepal.com
+      record: "{{ ansible_hostname }}.api.kube-master.ashishnepal.com"
+      type: A
+      ttl: 300
+      value: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      overwrite: true
+      private_zone: true
+      wait: yes
+  tags:
+    - updateDNS
+  when: (inventory_hostname in groups['tag_Role_kube_master'])
+
+########Stupid way to deal until i figure out how to handle negate
+- name: Create A record of the host
+  route53:
+      command: create
+      zone: kube-master.ashishnepal.com
+      record: "{{ ansible_hostname }}.etcd.kube-master.ashishnepal.com"
+      type: A
+      ttl: 300
+      value: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      overwrite: true
+      private_zone: true
+      wait: yes
+  tags:
+    - updateDNS
+  when: (inventory_hostname in groups['tag_Role_kube_etcd'])
+
+
+- name: Cleanup before executing anything
+  shell: yum-complete-transaction --cleanup-only
+
+- name: Remove list of packages
+  yum: name={{item}} state=absent
+  with_items:
+    - docker-engine-selinux
+    - docker-engine
+    - docker*
+
+- file:
+    path: /usr/local/src/prep-kube-cluster
+    state: directory
+    mode: 0755
+
+- name: Cert generating file
+  copy:
+    src: files/make-ca-cert.sh
+    dest: /usr/local/src/prep-kube-cluster/make-ca-cert.sh
+    mode: 0755
+
+
+- name: Add repo for kubernetes
+  yum_repository:
+    name: virt7-docker-common-release
+    description: virt7-docker-common-release
+    baseurl: http://cbs.centos.org/repos/virt7-docker-common-release/x86_64/os/
+    gpgcheck: no
+
+
+- name: Clean removed paths for docker
+  file:
+    state: absent
+    path: "{{ item }}/"
+  with_items:
+    - /etc/systemd/system/docker.service.d
+    - /var/lib/docker

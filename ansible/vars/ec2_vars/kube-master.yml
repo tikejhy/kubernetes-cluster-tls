@@ -1,0 +1,15 @@
+ec2_keypair: kube_KEY
+ec2_security_group: sg-00409a78
+ec2_instance_type: t2.micro
+ec2_image: ami-16776970
+ec2_subnet_ids: [ subnet-88ad06ef, subnet-7af64633, subnet-e9f700b2 ]
+ec2_region: eu-west-1
+ec2_tag_Name: kube-etcd-5
+ec2_tag_Role: kube-master
+ec2_tag_State: unconfigured
+ec2_prv_subnet_1: subnet-88ad06ef
+ec2_prv_subnet_2: subnet-7af64633
+ec2_prv_subnet_3: subnet-e9f700b2
+vpc_tag:   		kube-project
+
+

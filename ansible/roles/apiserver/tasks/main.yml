@@ -1,0 +1,89 @@
+--- 
+
+- include_vars: ec2_vars/kube-master.yml
+- include_vars: ec2_vars/all-kube.yml
+  tags: fixelblistener
+
+- name: hack on mount
+  command: mount -a
+
+- name: create gen-cert script
+  action: template src=templates/make-cert-runnner.j2 dest=/usr/local/src/prep-kube-cluster/gen-cert.sh mode=0755
+  when: (inventory_hostname in groups['tag_Role_kube_master'])
+
+- name: create certificate
+  command: /bin/bash /usr/local/src/prep-kube-cluster/gen-cert.sh
+
+- name: Delete Certificate if exists
+  iam_cert:
+    name: tikejhya
+    state: absent
+
+- name: Delete Certificate if exists
+  iam_cert:
+    name: api-certificate
+    state: absent
+  ignore_errors: yes
+
+- name: Upload Certificate
+  iam_cert:
+    name: api-certificate
+    state: present
+    cert: /srv/kubernetes/server.cert
+    key: /srv/kubernetes/server.key
+    cert_chain: /srv/kubernetes/ca.crt
+  run_once: true
+  delegate_to: "{{ groups['tag_Role_kube_master'][0] }}"
+
+- pause:
+    minutes: 1
+
+- name: update listner
+  ec2_elb_lb:
+    name: "kube-internal-{{ vpc_tag }}-api"
+    scheme: internal
+    state: present
+    region: eu-west-1
+    subnets:
+      - "{{ ec2_prv_subnet_1 }}"
+      - "{{ ec2_prv_subnet_2 }}"
+      - "{{ ec2_prv_subnet_3 }}"
+    listeners:
+      - protocol: http
+        load_balancer_port: 8080
+        instance_port: 8080
+        proxy_protocol: True
+      - protocol: https
+        load_balancer_port: 6443
+        instance_protocol: https
+        instance_port: 6443
+        ssl_certificate_id: "arn:aws:iam::375704836780:server-certificate/api-certificate"
+    health_check:
+        ping_protocol: tcp
+        ping_port: 6443
+        response_timeout: 5 # seconds
+        interval: 30 # seconds
+        unhealthy_threshold: 2
+        healthy_threshold: 10 
+  run_once: true                                      
+  delegate_to: "{{ groups['tag_Role_kube_master'][0] }}"
+  tags:                                               
+    - fixelblistener                                  
+
+- name: known token
+  action: template src=templates/known_tokens.j2 dest=/srv/kubernetes/known_tokens.csv
+
+- name: APISERVER configuration
+  action: template src=templates/apiserver.j2 dest=/etc/kubernetes/apiserver
+
+
+- name: enable services
+  systemd: name={{item}} state=restarted enabled=yes
+  with_items:
+      - kube-apiserver
+
+- copy: 
+   dest: /usr/local/src/prep-kube-cluster/
+   src: "{{ item }}"
+  with_fileglob: files/*.yaml
+  name: "Copy new config if exists"

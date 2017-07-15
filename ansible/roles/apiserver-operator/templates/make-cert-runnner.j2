@@ -1,0 +1,4 @@
+#!/bin/bash
+
+/bin/bash /usr/local/src/prep-kube-cluster/make-ca-cert.sh {{hostvars[inventory_hostname]['ansible_default_ipv4']['address']}}  {% for item in groups['tag_Role_kube_master'] %}IP:{{ hostvars[item]['ansible_eth0']['ipv4']['address'] }},{% endfor %}IP:10.254.0.1,DNS:api.kube-master.ashishnepal.com,DNS:etcd.kube-master.ashishnepal.com,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local
+

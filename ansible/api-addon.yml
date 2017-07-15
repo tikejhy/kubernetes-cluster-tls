@@ -1,0 +1,12 @@
+--- 
+- 
+  become: true
+  hosts: all
+  roles:
+    - prep
+    - kube-common
+    - efs-client
+    - flanneld
+    - apiserver-operator 
+    - controller-manager
+    - scheduler

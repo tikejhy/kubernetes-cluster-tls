@@ -1,0 +1,13 @@
+--- 
+
+- name: hack on mount
+  command: mount -a
+
+- name: APISERVER configuration
+  action: template src=templates/apiserver.j2 dest=/etc/kubernetes/apiserver
+
+
+- name: enable services
+  systemd: name={{item}} state=restarted enabled=yes
+  with_items:
+      - kube-apiserver

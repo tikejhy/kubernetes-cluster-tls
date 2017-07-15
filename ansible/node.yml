@@ -1,0 +1,12 @@
+--- 
+- 
+  become: true
+  hosts: all
+  roles:
+    #- selinux
+    - dumpall
+    - prep
+    - kube-common
+    - efs-client
+    - flanneld
+    - kubelet

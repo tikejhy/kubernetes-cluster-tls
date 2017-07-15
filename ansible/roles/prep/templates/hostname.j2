@@ -1,0 +1,13 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+
+{% for item in groups['tag_Role_kube_master'] %}                                       
+{{ hostvars[item]['ansible_eth0']['ipv4']['address'] }} {{ hostvars[item]['ansible_hostname']}}
+{% endfor %}                                                                       
+
+                                                                                   
+
+{% for item in groups['tag_Role_kube_node'] %}                                        
+{{ hostvars[item]['ansible_eth0']['ipv4']['address'] }} {{ hostvars[item]['ansible_hostname']}}
+{% endfor %}

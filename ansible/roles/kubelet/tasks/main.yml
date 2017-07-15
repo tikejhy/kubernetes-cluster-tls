@@ -1,0 +1,27 @@
+--- 
+- name: hack on mount
+  command: mount -a
+
+- name: kubelet configuration
+  action: template src=templates/kubelet.j2 dest=/etc/kubernetes/kubelet
+
+- name: kubelet configuration
+  action: template src=templates/proxy.j2 dest=/etc/kubernetes/proxy
+
+- name: kubelet SSL setup
+  action: template src=templates/kubectl_setup.j2 dest=/usr/bin/kubectl_setup.sh
+
+- name: create certificate
+  command: /bin/bash /usr/bin/kubectl_setup.sh
+
+- name: enable services and ensure it is not masked
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  with_items:
+     - kube-proxy
+     - kubelet
+     - flanneld
+     - docker

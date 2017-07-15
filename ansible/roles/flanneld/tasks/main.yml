@@ -1,0 +1,29 @@
+--- 
+- name: hack on mount
+  command: mount -a
+
+- name: Flanneld configuration
+  action: template src=templates/flanneld.j2 dest=/etc/sysconfig/flanneld
+  tags:
+    - flannelconf
+
+- name: sleep for a specified interval
+  command: sleep 30
+
+#- name: enable services and ensure it is not masked
+#  systemd:
+#    name: "{{ item }}"
+#    enabled: yes
+#    state: restarted
+#    daemon_reload: yes
+#    register: command_result
+#    failed_when: "'FAILED' in command_result.stderr"
+#  with_items:
+#     - flanneld
+
+- name: Restart flannel until success 
+  command: service flanneld restart
+  retries: 10
+  delay: 3
+  register: result
+  until: result.rc == 0

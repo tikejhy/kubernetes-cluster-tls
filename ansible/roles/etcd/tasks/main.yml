@@ -1,0 +1,125 @@
+--- 
+- include_vars: ec2_vars/kube-etcd.yml
+  tags: fixelblistener
+
+- name: hack on mount
+  command: mount -a
+
+# create a directory if it doesn't exist
+- file:
+    path: /srv/kubernetes/etcd/
+    state: directory
+    mode: 0755
+
+- name: Create openssl config
+  template:
+     src: templates/etcd-openssl.j2
+     dest: /tmp/openssl.conf
+     mode: 0755
+
+- name: Create CA Cert
+  template:
+     src: templates/etcd_create_CA.j2
+     dest: /tmp/etcd_create_CA.sh
+     mode: 0755
+
+- name: create CA file only once
+  shell: /tmp/etcd_create_CA.sh
+  run_once: true
+  delegate_to: "{{ groups['tag_Role_kube_etcd'][0] }}"
+
+- name: Create member certificates
+  template:
+     src: templates/etcd_create_certificates.j2
+     dest: /tmp/etcd_create_certificate.sh
+     mode: 0755
+
+- name: create member certificate file
+  shell: /tmp/etcd_create_certificate.sh
+
+- name: enable services
+  systemd: name=etcd state=stopped
+
+- name: Remove resedue if any
+  file:
+    state: absent
+    path: "/var/lib/etcd/default.etcd"
+
+- name: ETCD configuration
+  action: template src=templates/etcd.j2 dest=/etc/etcd/etcd.conf
+  tags:
+    - etcdconf
+
+- name: ETCD systemd config
+  action: template src=templates/etcd.service.j2 dest=/usr/lib/systemd/system/etcd.service
+
+#################
+
+- name: Delete Certificate if exists
+  iam_cert:
+    name: etcd-certificates
+    state: absent
+  ignore_errors: yes
+
+- name: Upload Certificate
+  iam_cert:
+    name: etcd-certificates
+    state: present
+    cert: /srv/kubernetes/etcd/client.pem
+    key: /srv/kubernetes/etcd/client-key.pem
+    cert_chain: /srv/kubernetes/etcd/ca.pem
+  run_once: true
+  delegate_to: "{{ groups['tag_Role_kube_etcd'][0] }}"
+
+- pause:
+    minutes: 1
+
+- name: update listner
+  ec2_elb_lb:
+    name: "kube-internal-{{ vpc_tag }}-etcd"
+    scheme: internal
+    state: present
+    region: eu-west-1
+    subnets:
+      - "{{ ec2_prv_subnet_1 }}"
+      - "{{ ec2_prv_subnet_2 }}"
+      - "{{ ec2_prv_subnet_3 }}"
+    listeners:
+      - protocol: https
+        load_balancer_port: 2379
+        instance_protocol: https
+        instance_port: 2379
+        ssl_certificate_id: "arn:aws:iam::375704836780:server-certificate/etcd-certificates"
+    health_check:
+        ping_protocol: ssl
+        ping_port: 2379
+        response_timeout: 2 # seconds
+        interval: 5 # seconds
+        unhealthy_threshold: 2
+        healthy_threshold: 5
+  run_once: true
+  delegate_to: "{{ groups['tag_Role_kube_etcd'][0] }}"
+  tags:
+    - fixelblistener
+
+#################
+
+
+- name: start service
+  systemd: name=etcd state=started 
+
+
+- name: ETCD systemd config
+  template: 
+     src: templates/etcd.network.j2 
+     dest: /tmp/etcd_create_network.sh 
+     mode: 0755
+
+- pause:
+    minutes: 2
+
+- name: create etcd Network
+  shell: /tmp/etcd_create_network.sh >> /tmp/etcd_create_network.log
+  run_once: true
+  delegate_to: "{{ groups['tag_Role_kube_etcd'][0] }}"
+  ignore_errors: yes

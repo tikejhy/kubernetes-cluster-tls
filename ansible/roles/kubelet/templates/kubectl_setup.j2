@@ -1,0 +1,11 @@
+#!/bin/bash
+
+kubectl config set-cluster goodness --server=https://api.kube-master.ashishnepal.com:6443 --insecure-skip-tls-verify=true
+kubectl config unset clusters
+kubectl config set-cluster goodness --certificate-authority=/srv/kubernetes/ca.crt --embed-certs=true --server=https://api.kube-master.ashishnepal.com:6443
+kubectl config set-credentials admin --client-certificate=/srv/kubernetes/kubecfg.crt --client-key=/srv/kubernetes/kubecfg.key --embed-certs=true --token=@dm1nP@ss@ck3rT0k3nck3rT0k3nck3rT0k3nck3rT0k3n
+kubectl config set-context service-account-context --cluster=goodness --user=admin
+kubectl config use-context service-account-context
+cp /root/.kube/config /var/lib/kubelet/kubeconfig
+mkdir -p /var/lib/kube-proxy
+cp /root/.kube/config /var/lib/kube-proxy/kubeconfig

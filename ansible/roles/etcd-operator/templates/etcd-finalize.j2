@@ -1,0 +1,16 @@
+#!/bin/bash
+
+curl http://{{ internal_etcd_elb_hostname }}:2379/v2/members -XPOST -H "Content-Type: application/json" -d '{"peerURLs":["http://{{hostvars[inventory_hostname]['ansible_default_ipv4']['address']}}:2380"]}'
+
+#export VAL=$(python /usr/bin/etcd-operators.py | sed 's/:2380 /:2380,/g;s/ http/=http/g;;s#^#ETCD_INITIAL_CLUSTER=\"#g;s/$/\"/g')
+export VAL=$(python /usr/bin/etcd-operators.py | tr -d ' ' | sed 's/,$//g')
+
+sed -i 's@.*ETCD_INITIAL_CLUSTER=.*@'"$VAL"'@' /etc/etcd/etcd.conf
+sed -i 's@ETCD_INITIAL_CLUSTER_STATE="new"@ETCD_INITIAL_CLUSTER_STATE="existing"@' /etc/etcd/etcd.conf
+service etcd stop
+service flanneld stop
+
+rm -rf /var/lib/etcd/default.etcd/member
+
+service etcd start
+service flanneld start

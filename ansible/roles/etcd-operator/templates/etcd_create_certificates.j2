@@ -1,0 +1,5 @@
+#!/bin/bash
+
+openssl genrsa -out member-{{hostvars[inventory_hostname]['ansible_hostname']}}-key.pem 2048
+openssl req -new -key member-{{hostvars[inventory_hostname]['ansible_hostname']}}-key.pem -out member-{{hostvars[inventory_hostname]['ansible_hostname']}}.csr -subj "/CN={{hostvars[inventory_hostname]['ansible_hostname']}}" -config /tmp/openssl.conf
+openssl x509 -req -in member-{{hostvars[inventory_hostname]['ansible_hostname']}}.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out member-{{hostvars[inventory_hostname]['ansible_hostname']}}.pem -days 3650 -extensions ssl_client -extfile /tmp/openssl.conf

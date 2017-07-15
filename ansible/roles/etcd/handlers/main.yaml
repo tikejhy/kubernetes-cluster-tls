@@ -1,0 +1,4 @@
+- name: create etcd Network
+  shell: /tmp/etcd_create_network.sh >> /tmp/etcd_create_network.log
+  delegate_to: "{{ groups['tag_Role_kube_master'] | first }}"
+  run_once: true

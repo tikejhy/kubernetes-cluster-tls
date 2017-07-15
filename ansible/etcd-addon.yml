@@ -1,0 +1,10 @@
+--- 
+- 
+  become: true
+  hosts: all
+  roles:
+    - prep
+    - kube-common
+    - efs-client
+    - flanneld
+    - etcd-operator

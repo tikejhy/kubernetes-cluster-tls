@@ -1,0 +1,4 @@
+#!/bin/bash
+
+etcdctl -C https://etcd.kube-master.ashishnepal.com:2379 --ca-file /srv/kubernetes/etcd/ca.pem mkdir /kube-centos/network
+etcdctl -C https://etcd.kube-master.ashishnepal.com:2379 --ca-file /srv/kubernetes/etcd/ca.pem mk /kube-centos/network/config "{ \"Network\": \"172.30.0.0/16\", \"SubnetLen\": 24, \"Backend\": { \"Type\": \"vxlan\" } }"

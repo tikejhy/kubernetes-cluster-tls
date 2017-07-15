@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd /srv/kubernetes/etcd;
+openssl genrsa -out /srv/kubernetes/etcd/client-key.pem 2048
+openssl req -new -key /srv/kubernetes/etcd/client-key.pem -out /srv/kubernetes/etcd/client.csr -subj "/CN=client" -config /tmp/openssl.conf
+openssl x509 -req -in /srv/kubernetes/etcd/client.csr -CA /srv/kubernetes/etcd/ca.pem -CAkey /srv/kubernetes/etcd/ca-key.pem -CAcreateserial -out /srv/kubernetes/etcd/client.pem -days 3650 -extensions ssl_client -extfile /tmp/openssl.conf

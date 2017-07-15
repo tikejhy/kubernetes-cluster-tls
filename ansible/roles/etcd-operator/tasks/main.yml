@@ -1,0 +1,38 @@
+---
+- name: hack on mount
+  command: mount -a
+
+- name: Create openssl config
+  template:
+     src: templates/etcd-openssl.j2
+     dest: /tmp/openssl.conf
+     mode: 0755
+
+- name: Create openssl config
+  template:
+     src: templates/etcd_create_certificates.j2
+     dest: /tmp/etcd_create_certificate.sh
+     mode: 0755
+
+- name: create member certificate file
+  shell: /tmp/etcd_create_certificate.sh
+
+- name: enable services
+  systemd: name=etcd state=stopped
+
+- name: Remove resedue if any
+  file:
+    state: absent
+    path: "/var/lib/etcd/default.etcd"
+
+- name: ETCD configuration
+  action: template src=templates/etcd.j2 dest=/etc/etcd/etcd.conf
+
+- name: ETCD Operators script
+  action: template src=templates/etcd-operators.j2 dest=/usr/bin/etcd-operators.py
+
+- name: Finalize cluster configuration
+  action: template src=templates/etcd-finalize.j2 dest=/usr/bin/etcd-finalize.sh
+
+- name: start service
+  systemd: name=etcd state=started 

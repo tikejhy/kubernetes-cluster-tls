@@ -1,0 +1,7 @@
+--- 
+- name: Dump all vars
+  action: template src=templates/dumpall.j2 dest=/tmp/ansible.all
+  
+- fetch:
+    src: /tmp/ansible.all
+    dest: /tmp/ansible.all

@@ -1,0 +1,14 @@
+--- 
+- 
+  become: true
+  hosts: all
+  roles:
+    #- selinux
+    - prep
+    - kube-common
+    - efs-client
+    #- etcd
+    - flanneld
+    - apiserver  
+    - controller-manager
+    - scheduler

@@ -1,0 +1,80 @@
+--- 
+- include_vars: ec2_vars/all-kube.yml
+  tags:
+    upgradeto17
+
+- name: Install list of common packages
+  yum: name={{item}} state=installed update_cache=yes enablerepo=virt7-docker-common-release
+  ignore_errors: yes
+  with_items:
+    #- kubernetes
+    #- etcd
+    #- flannel
+    - docker-1.12.6-28.git1398f24.el7.centos.x86_64
+    - kubernetes-node-1.5.2-0.6.gitd33fd89.el7.x86_64
+    - kubernetes-1.5.2-0.6.gitd33fd89.el7.x86_64
+    - etcd-3.1.7-1.el7.x86_64
+    - flannel-0.7.0-1.el7.x86_64
+
+- name: Download kubernetes and unarchive
+  unarchive:
+    src: "https://dl.k8s.io/v{{ kubernetes_version }}/kubernetes.tar.gz"
+    dest: "/usr/local/src/"
+    remote_src: True
+  tags:
+    - upgradeto17
+
+- name: Extract binary first phase
+  shell: export KUBERNETES_SKIP_CONFIRM=Y; /bin/bash /usr/local/src/kubernetes/cluster/get-kube-binaries.sh
+  tags:
+    - upgradeto17
+
+- pause:
+    minutes: 2
+
+- name: Download kubernetes binary
+  shell: tar -zxvf /usr/local/src/kubernetes/server/kubernetes-server-linux-amd64.tar.gz --directory /usr/local/src/kubernetes/server/ 
+  tags:
+    - upgardeto17
+
+
+- copy: 
+   dest: /usr/local/src/prep-kube-cluster/
+   src: files/kube-17.sh
+  name: "Replace binaries"
+  tags:
+    - upgradeto17
+
+- name: upgrade to 17
+  shell: /bin/bash /usr/local/src/prep-kube-cluster/kube-17.sh
+  tags:
+    - upgradeto17
+
+# Gather facts about a particular ELB
+- name: Get facts on ELB
+  sudo: False
+  local_action: 
+    module: ec2_elb_facts
+    names: kube-internal-kube-project-etcd
+    region: eu-west-1
+  register: elb_facts_etcd
+
+- set_fact:
+    internal_etcd_elb_hostname: "{{ elb_facts_etcd.elbs.0.dns_name }}"
+
+
+# Gather facts about a particular ELB
+- name: Get facts on ELB
+  sudo: False
+  local_action:
+    module: ec2_elb_facts
+    names: kube-internal-kube-project-api
+    region: eu-west-1
+  register: elb_facts_etcd
+
+- set_fact:
+    internal_api_elb_hostname: "{{ elb_facts_etcd.elbs.0.dns_name }}"
+
+
+- name: kubernetes config
+  action: template src=templates/kubernetes/config.j2 dest=/etc/kubernetes/config
