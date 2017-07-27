@@ -72,3 +72,7 @@ Incomplete:
 
 NOTE:
 	vars.tf: takes majority of variable however few things are still to be moved to vars you may find hardcoded stuffs (well its initial stage yet)
+Example: 
+
+ansible-playbook -i localhost provision-ec2.yml -e 'type=kube-etcd'
+ansible-playbook -i "localhost," -c local etcd.yml --tags=addon
