@@ -72,7 +72,11 @@ Incomplete:
 
 NOTE:
 	vars.tf: takes majority of variable however few things are still to be moved to vars you may find hardcoded stuffs (well its initial stage yet)
-Example: 
+#Example: 
 
 ansible-playbook -i localhost provision-ec2.yml -e 'type=kube-etcd'
 ansible-playbook -i "localhost," -c local etcd.yml --tags=addon
+
+#SOME Hack's to identify next count for addon
+jq -r '.tag_Role_kube_etcd[]' | awk 'BEGIN{FS=OFS="_"}{NF--; print}'
+jq -r '.tag_Role_kube_etcd[]' | awk -F "_" '{print ($NF +1)}'
