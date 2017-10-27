@@ -2,10 +2,12 @@ DRAFT [This works with some adjustments; ]
 Terraform and Ansible is tied closely together; while terraform creats cluster it also renders some of the configuration for Ansible.
 
 I will be seperating all part of terraform into different modules (i.e black box concepts of managing part of cluster) and additional nodes for etcd/master/minions able to run as Ansible solo (i.e trigger configuraiton on boot.)
+(when i have got some time)
+
 
 
 Version:
-	kubernetes 1.5 by default:
+	kubernetes 1.5 by default: 
 		kubernetes 1.5 is overidden by 1.7 (because of configMap bug had to install 1.7)
                 May be incomplete: but its under ansible role; should be able to override by variable
 
